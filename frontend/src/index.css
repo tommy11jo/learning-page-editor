@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  h1 {
+    @apply text-2xl font-bold my-4;
+  }
+  h2 {
+    @apply text-xl font-semibold my-3;
+  }
+}
+@layer components {
+  ul {
+    @apply list-disc list-inside m-4;
+  }
+
+  ol {
+    @apply list-decimal list-inside m-4;
+  }
+
+  li {
+    @apply mb-2;
+  }
+}
+
+/* Override prose mirror focused to prevent blue border */
+.ProseMirror-focused {
+  outline: none;
+}

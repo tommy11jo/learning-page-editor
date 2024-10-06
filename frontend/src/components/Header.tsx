@@ -7,7 +7,10 @@ const Header = () => {
             Learning Page Builder
           </h1>
           <p className="text-sm text-gray-600">
-            An editor for authoring rich media for course content
+            A notion-like editor for authoring rich media for course content
+          </p>
+          <p className="text-sm text-gray-600">
+            Press "/" to open the command menu.
           </p>
         </div>
         <a
