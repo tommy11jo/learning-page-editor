@@ -10,8 +10,8 @@ import { HelpCircle, Edit, Trash2 } from "lucide-react"
 import { MCQData, MCQModal } from "./MCQModal"
 
 export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
-  const { question, options, id } = props.node.attrs
-  const initialData = { question, options, id }
+  const { question, options, id, correctAnswer } = props.node.attrs
+  const initialData = { question, options, id, correctAnswer }
   const editor = props.editor
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -37,22 +37,24 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
       className="mcq-node p-2 border border-gray-400 rounded-lg shadow-md max-w-xl relative"
       contentEditable={false}
     >
-      <div className="absolute top-2 right-2 flex space-x-2">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="p-1 text-blue-500 hover:text-blue-600"
-          aria-label="Edit"
-        >
-          <Edit size={20} />
-        </button>
-        <button
-          onClick={() => props.deleteNode()}
-          className="p-1 text-red-500 hover:text-red-600"
-          aria-label="Delete"
-        >
-          <Trash2 size={20} />
-        </button>
-      </div>
+      {props.editor.isEditable && (
+        <div className="absolute top-2 right-2 flex space-x-2">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="p-1 text-blue-500 hover:text-blue-600"
+            aria-label="Edit"
+          >
+            <Edit size={20} />
+          </button>
+          <button
+            onClick={() => props.deleteNode()}
+            className="p-1 text-red-500 hover:text-red-600"
+            aria-label="Delete"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
+      )}
       <div className="mcq-question mb-2 pl-4 flex items-center uppercase">
         <HelpCircle size={20} className="mr-2" />
         <span>Quick Quiz</span>
@@ -82,21 +84,23 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
               </label>
             </div>
           ))}
-          <div className="flex justify-between mt-4">
-            <button
-              type="submit"
-              className="mcq-submit px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Submit
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="mcq-clear px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-            >
-              Clear
-            </button>
-          </div>
+          {!props.editor.isEditable && (
+            <div className="flex justify-between mt-4">
+              <button
+                type="submit"
+                className="mcq-submit px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Submit
+              </button>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="mcq-clear px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </form>
       </div>
       <MCQModal
@@ -128,6 +132,9 @@ export const MCQNode = Node.create({
       },
       options: {
         default: [],
+      },
+      correctAnswer: {
+        default: 0,
       },
     }
   },
