@@ -6,11 +6,12 @@ import {
   ReactNodeViewRenderer,
 } from "@tiptap/react"
 import { Node } from "@tiptap/core"
-import { HelpCircle } from "lucide-react"
+import { HelpCircle, Edit, Trash2 } from "lucide-react"
 import { MCQData, MCQModal } from "./MCQModal"
 
 export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
-  const { question, options } = props.node.attrs
+  const { question, options, id } = props.node.attrs
+  const initialData = { question, options, id }
   const editor = props.editor
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -18,22 +19,17 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
     e.preventDefault()
     // TODO: Implement submission logic
     console.log("Submitted answer:", selectedOption)
+    console.log("question id", id)
   }
 
   const handleClear = () => {
     setSelectedOption(null)
   }
 
-  const handleMCQSubmit = (data: MCQData) => {
-    editor
-      ?.chain()
-      .focus()
-      .insertContent({
-        type: "mcqNode",
-        attrs: { ...data },
-        content: [{ type: "text", text: "MCQ: " + data.question }],
-      })
-      .run()
+  const handleUpdateMCQ = (data: MCQData) => {
+    // tiptap allows forcing a re-render using attribute updates
+    props.updateAttributes({ ...data })
+    setIsModalOpen(false)
   }
 
   return (
@@ -41,6 +37,22 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
       className="mcq-node p-2 border border-gray-400 rounded-lg shadow-md max-w-xl relative"
       contentEditable={false}
     >
+      <div className="absolute top-2 right-2 flex space-x-2">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="p-1 text-blue-500 hover:text-blue-600"
+          aria-label="Edit"
+        >
+          <Edit size={20} />
+        </button>
+        <button
+          onClick={() => props.deleteNode()}
+          className="p-1 text-red-500 hover:text-red-600"
+          aria-label="Delete"
+        >
+          <Trash2 size={20} />
+        </button>
+      </div>
       <div className="mcq-question mb-2 pl-4 flex items-center uppercase">
         <HelpCircle size={20} className="mr-2" />
         <span>Quick Quiz</span>
@@ -88,15 +100,11 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
         </form>
       </div>
       <MCQModal
-        onSubmit={(data) => {
-          handleMCQSubmit(data)
-          setIsModalOpen(false)
-        }}
+        handleUpdateMCQ={handleUpdateMCQ}
         editor={editor}
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        initQuestion={question}
-        initOptions={options}
+        initialData={initialData}
       />
     </NodeViewWrapper>
   )
@@ -112,6 +120,9 @@ export const MCQNode = Node.create({
   draggable: false,
   addAttributes() {
     return {
+      id: {
+        default: "",
+      },
       question: {
         default: "",
       },

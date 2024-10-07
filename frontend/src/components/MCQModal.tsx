@@ -3,34 +3,38 @@ import { useState } from "react"
 import Modal from "react-modal"
 
 export interface MCQData {
+  id?: string
   question: string
   options: string[]
 }
 
 interface MCQModalProps {
-  onSubmit: (data: MCQData, editor: Editor) => void
+  handleUpdateMCQ: (data: MCQData, editor: Editor) => void
   editor: Editor
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
-  initQuestion: string
-  initOptions: string[]
+  initialData?: MCQData
 }
 // this exists as a global var since it is must be called outside of a react context via a tip tap command
 const MCQModal = ({
-  onSubmit,
+  handleUpdateMCQ,
   editor,
   isOpen,
   setIsOpen,
-  initQuestion,
-  initOptions,
+  initialData,
 }: MCQModalProps) => {
-  const [tempQuestion, setTempQuestion] = useState(initQuestion)
-  const [tempOptions, setTempOptions] = useState<string[]>(initOptions)
+  const [tempQuestion, setTempQuestion] = useState(
+    initialData?.question || "Write your question."
+  )
+  const [tempOptions, setTempOptions] = useState<string[]>(
+    initialData?.options || ["A", "B", "C", "D"]
+  )
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    onSubmit(
+    handleUpdateMCQ(
       {
+        id: initialData?.id,
         question: tempQuestion,
         options: tempOptions.filter((option) => option.trim() !== ""),
       },
@@ -39,16 +43,18 @@ const MCQModal = ({
     setIsOpen(false)
   }
 
+  const isEditing = !!initialData?.id
+
   return (
     <Modal
       isOpen={isOpen}
       onRequestClose={() => setIsOpen(false)}
-      className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl border border-gray-400"
+      className="max-w-md mx-auto mt-10 p-6 bg-gray-300 rounded-lg shadow-xl border border-gray-400"
     >
       <h2 className="text-2xl font-bold mb-4">
-        Create a multiple choice question
+        {isEditing ? "Edit" : "Create"} a multiple choice question
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
         <div className="relative">
           <label htmlFor="question" className="block mb-1 font-semibold">
             Question:
@@ -64,6 +70,7 @@ const MCQModal = ({
           />
         </div>
         <div className="space-y-2">
+          <label className="block mb-1 font-semibold">Options:</label>
           {tempOptions.map((option, index) => (
             <div key={index}>
               <input
@@ -86,13 +93,13 @@ const MCQModal = ({
             type="submit"
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Create MCQ
+            {isEditing ? "Update MCQ" : "Create MCQ"}
           </button>
           <button
             onClick={() => setIsOpen(false)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
-            Close
+            Cancel
           </button>
         </div>
       </form>

@@ -1,4 +1,10 @@
-import { BubbleMenu, Editor, EditorContent, useEditor } from "@tiptap/react"
+import {
+  BubbleMenu,
+  Editor,
+  EditorContent,
+  JSONContent,
+  useEditor,
+} from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Extension } from "@tiptap/core"
 import { Command } from "@tiptap/core"
@@ -7,6 +13,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { MCQModal, MCQData } from "./MCQModal"
 import { MCQNode } from "./MCQNode"
 import { useState, useCallback } from "react"
+import { v4 as uuidv4 } from "uuid"
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -30,14 +37,11 @@ const AppendTextExtension = Extension.create({
   },
 })
 
-const editorHTMLString = `
-    <p>Select any text to see the menu. </p>
-    <p>Select <em>this text</em> to see the menu showing italics.</p>
-    <p>Try the append text command after <strong>here:</strong></p>
-    <p>Neat, isn’t it?</p>
-`
+interface TipTapEditorProps {
+  initialJSONContent: JSONContent | JSONContent[]
+}
 
-const TipTapEditor = () => {
+const TipTapEditor = ({ initialJSONContent }: TipTapEditorProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const openMCQModal = useCallback(() => {
@@ -67,29 +71,27 @@ const TipTapEditor = () => {
         },
       },
     },
-    content: editorHTMLString,
-    onUpdate: ({ editor }) => {
-      const lastNode = editor.state.doc.lastChild
-      if (lastNode && lastNode.type.name !== "paragraph") {
-        editor.commands.insertContentAt(
-          editor.state.doc.content.size,
-          "<p></p>"
-        )
-      }
-    },
+    content: initialJSONContent,
   })
 
-  const handleMCQSubmit = (data: MCQData, editor: Editor) => {
-    if (editor) {
-      editor
-        .chain()
-        .focus()
-        .insertContent({
+  const insertMCQNode = (data: MCQData, editor: Editor) => {
+    const newData = { ...data, id: uuidv4() }
+
+    editor
+      ?.chain()
+      .insertContent([
+        {
           type: "mcqNode",
-          attrs: { ...data },
-        })
-        .run()
-    }
+          attrs: { ...newData },
+        },
+        { type: "paragraph" },
+      ])
+      .run()
+  }
+  const handleUpdateMCQ = (data: MCQData, editor: Editor) => {
+    // always insert new MCQ nodes
+    console.log("handle update mcq", data)
+    insertMCQNode(data, editor)
   }
 
   if (!editor) return <></>
@@ -148,12 +150,10 @@ const TipTapEditor = () => {
       </div>
       {/* The modal that gets opened by the slash command */}
       <MCQModal
-        onSubmit={handleMCQSubmit}
+        handleUpdateMCQ={handleUpdateMCQ}
         editor={editor}
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        initQuestion={"Choose the correct answer"}
-        initOptions={["Option A", "Option B", "Option C", "Option D"]}
       />
     </div>
   )

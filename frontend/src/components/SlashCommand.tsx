@@ -191,7 +191,6 @@ const renderItems = () => {
       }
     },
     onExit: () => {
-      popup[0].destroy()
       component?.destroy()
     },
   }
