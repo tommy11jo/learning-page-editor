@@ -1,9 +1,12 @@
-import { BubbleMenu, EditorContent, useEditor } from "@tiptap/react"
+import { BubbleMenu, Editor, EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Extension } from "@tiptap/core"
 import { Command } from "@tiptap/core"
 import SlashCommandExtension from "./SlashCommand"
 import Placeholder from "@tiptap/extension-placeholder"
+import { MCQModal, MCQData } from "./MCQModal"
+import { MCQNode } from "./MCQNode"
+import { useState, useCallback } from "react"
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -35,14 +38,21 @@ const editorHTMLString = `
 `
 
 const TipTapEditor = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const openMCQModal = useCallback(() => {
+    setIsModalOpen(true)
+  }, [])
+
   const editor = useEditor({
     extensions: [
       StarterKit,
-      SlashCommandExtension,
+      SlashCommandExtension({ openMCQModal }),
       AppendTextExtension,
       Placeholder.configure({
         placeholder: "Write here...",
       }),
+      MCQNode,
     ],
     editorProps: {
       handleDOMEvents: {
@@ -58,7 +68,29 @@ const TipTapEditor = () => {
       },
     },
     content: editorHTMLString,
+    onUpdate: ({ editor }) => {
+      const lastNode = editor.state.doc.lastChild
+      if (lastNode && lastNode.type.name !== "paragraph") {
+        editor.commands.insertContentAt(
+          editor.state.doc.content.size,
+          "<p></p>"
+        )
+      }
+    },
   })
+
+  const handleMCQSubmit = (data: MCQData, editor: Editor) => {
+    if (editor) {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "mcqNode",
+          attrs: { ...data },
+        })
+        .run()
+    }
+  }
 
   if (!editor) return <></>
 
@@ -66,11 +98,7 @@ const TipTapEditor = () => {
     "border-none text-black text-sm font-medium p-1 hover:bg-gray-200 rounded-md"
 
   return (
-    <div
-      onClick={() => {
-        editor.chain().focus().run()
-      }}
-    >
+    <div className="p-4 m-4 border border-gray-400 rounded-lg">
       <BubbleMenu
         className="flex bg-gray-300 gap-2 p-1 rounded-md border border-gray-400"
         editor={editor}
@@ -108,7 +136,25 @@ const TipTapEditor = () => {
           Strike
         </button>
       </BubbleMenu>
-      <EditorContent editor={editor} />
+      <div
+        onClick={(e) => {
+          // Only focus the editor if the click is directly on this div
+          if (e.target === e.currentTarget) {
+            editor?.chain().focus().run()
+          }
+        }}
+      >
+        <EditorContent editor={editor} />
+      </div>
+      {/* The modal that gets opened by the slash command */}
+      <MCQModal
+        onSubmit={handleMCQSubmit}
+        editor={editor}
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        initQuestion={"Choose the correct answer"}
+        initOptions={["Option A", "Option B", "Option C", "Option D"]}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { Extension, Range, ReactRenderer } from "@tiptap/react"
 import { Editor } from "@tiptap/core"
-import { Heading1, Heading2, Text } from "lucide-react"
+import { Heading1, Heading2, Text, List } from "lucide-react"
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import Suggestion from "@tiptap/suggestion"
 import tippy from "tippy.js"
@@ -18,7 +18,7 @@ interface CommandItemProps {
   icon: ReactNode
 }
 
-const getSuggestionItems = () => {
+const getSuggestionItems = (config: SlashCommandConfig) => {
   return [
     {
       title: "Text",
@@ -60,6 +60,16 @@ const getSuggestionItems = () => {
           .deleteRange(range)
           .setNode("heading", { level: 2 })
           .run()
+      },
+    },
+    {
+      title: "MCQ",
+      description: "Multiple Choice Question",
+      searchTerms: ["mcq", "multiple choice"],
+      icon: <List size={18} />,
+      command: ({ editor, range }: CommandProps) => {
+        editor.chain().focus().deleteRange(range).run()
+        config.openMCQModal()
       },
     },
   ]
@@ -116,7 +126,7 @@ const CommandList = ({
 
   const commandListContainer = useRef<HTMLDivElement>(null)
 
-  return items.length > 0 ? (
+  return (
     <div
       id="slash-command"
       ref={commandListContainer}
@@ -144,8 +154,6 @@ const CommandList = ({
         )
       })}
     </div>
-  ) : (
-    <></>
   )
 }
 
@@ -188,6 +196,7 @@ const renderItems = () => {
     },
   }
 }
+
 const Command = Extension.create({
   name: "slash-command",
   addOptions() {
@@ -217,11 +226,17 @@ const Command = Extension.create({
     ]
   },
 })
+export { CommandList }
 
-const SlashCommandExtension = Command.configure({
-  suggestion: {
-    items: getSuggestionItems,
-    render: renderItems,
-  },
-})
+interface SlashCommandConfig {
+  openMCQModal: () => void
+}
+
+const SlashCommandExtension = (config: SlashCommandConfig) =>
+  Command.configure({
+    suggestion: {
+      items: () => getSuggestionItems(config),
+      render: renderItems,
+    },
+  })
 export default SlashCommandExtension

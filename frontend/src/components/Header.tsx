@@ -1,7 +1,7 @@
 const Header = () => {
   return (
-    <header className="p-4">
-      <div className="container mx-auto flex justify-between items-center gap-3">
+    <header className="pt-4 bg-gray-300">
+      <div className="container mx-auto flex justify-between items-center gap-3 ">
         <div>
           <h1 className="text-lg font-bold text-black">
             Learning Page Builder

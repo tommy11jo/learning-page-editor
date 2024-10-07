@@ -1,7 +1,13 @@
+import { useEffect } from "react"
+import Modal from "react-modal"
 import Header from "./components/Header"
 import TipTapEditor from "./components/TipTapEditor"
 
 function App() {
+  useEffect(() => {
+    Modal.setAppElement("#root")
+  }, [])
+
   return (
     <>
       <Header />

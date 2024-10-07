@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Note: you will need the post css vscode plugin to pass linter checks */
+@layer base {
+  input,
+  textarea {
+    @apply border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500;
+  }
+}
+
 @layer components {
   h1 {
     @apply text-2xl font-bold my-4;
@@ -9,8 +17,6 @@
   h2 {
     @apply text-xl font-semibold my-3;
   }
-}
-@layer components {
   ul {
     @apply list-disc list-inside m-4;
   }
