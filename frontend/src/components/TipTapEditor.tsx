@@ -10,6 +10,7 @@ import { learningPageApi } from "../api/learningPage"
 import { mcqApi } from "../api/mcq"
 import { useTipTapEditor } from "./TipTapContext"
 import { toast } from "react-hot-toast"
+import { Mathematics } from "@tiptap-pro/extension-mathematics"
 
 const TipTapEditor = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -27,6 +28,7 @@ const TipTapEditor = () => {
         placeholder: "Write here...",
       }),
       MCQNode,
+      Mathematics,
     ],
     editorProps: {
       handleDOMEvents: {

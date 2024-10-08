@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.multi_choice_question import router as multi_choice_question_router
 from app.learning_page import router as learning_page_router
+from app.latex import router as latex_router
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,6 +21,7 @@ app.add_middleware(
 
 app.include_router(multi_choice_question_router)
 app.include_router(learning_page_router)
+app.include_router(latex_router)
 
 
 @app.get("/")

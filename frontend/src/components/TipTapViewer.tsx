@@ -3,10 +3,11 @@ import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { MCQNode } from "./MCQNode"
 import { learningPageApi } from "../api/learningPage"
+import { Mathematics } from "@tiptap-pro/extension-mathematics"
 
 const TipTapViewer: React.FC = () => {
   const editor = useEditor({
-    extensions: [StarterKit, MCQNode],
+    extensions: [StarterKit, MCQNode, Mathematics],
     content: "",
     editable: false,
   })

@@ -1,9 +1,11 @@
 import { Extension, Range, ReactRenderer } from "@tiptap/react"
 import { Editor } from "@tiptap/core"
-import { Heading1, Heading2, Text, List } from "lucide-react"
+import { Heading1, Heading2, Text, List, Sigma } from "lucide-react"
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import Suggestion from "@tiptap/suggestion"
 import tippy from "tippy.js"
+import "katex/dist/katex.min.css"
+import { latexApi } from "../api/latex"
 
 // adapted the code from https://github.com/steven-tey/novel/blob/main/packages/core/src/ui/editor/extensions/slash-command.tsx
 
@@ -64,12 +66,22 @@ const getSuggestionItems = (config: SlashCommandConfig) => {
     },
     {
       title: "MCQ",
-      description: "Multiple Choice Question",
+      description: "Multiple choice question.",
       searchTerms: ["mcq", "multiple choice"],
       icon: <List size={18} />,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).run()
         config.openMCQModal()
+      },
+    },
+    {
+      title: "LaTex AI",
+      description: "Describe a math formula in english.",
+      searchTerms: ["latex", "formula"],
+      icon: <Sigma size={18} />,
+      command: ({ editor, range }: CommandProps) => {
+        handleLatexInput(editor)
+        editor.chain().focus().deleteRange(range).run()
       },
     },
   ]
@@ -157,6 +169,65 @@ const CommandList = ({
   )
 }
 
+const handleLatexInput = (editor: Editor) => {
+  // Create an input element
+  const { from, to } = editor.state.selection
+  const coords = editor.view.coordsAtPos(from)
+
+  const inputBox = document.createElement("div")
+  inputBox.style.position = "absolute"
+  inputBox.style.left = `${coords.left}px`
+  inputBox.style.top = `${coords.top + window.scrollY}px`
+  inputBox.style.zIndex = "100"
+  inputBox.style.display = "flex"
+  inputBox.style.flexDirection = "column"
+
+  const input = document.createElement("input")
+  input.style.color = "black"
+
+  const subtext = document.createElement("span")
+  subtext.textContent = "type enter to generate"
+  subtext.style.color = "gray"
+  subtext.style.fontSize = "12px"
+  subtext.style.marginTop = "2px"
+
+  inputBox.appendChild(input)
+  inputBox.appendChild(subtext)
+
+  // Append the input box to the editor
+  // Append to the body for absolute positioning parent
+  document.body.appendChild(inputBox)
+
+  // Focus the input
+  setTimeout(() => input.focus(), 0)
+
+  // Handle the 'Enter' event
+  // Also in the capture phase, to override the previous one
+  inputBox.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      event.stopPropagation()
+
+      document.body.removeChild(inputBox)
+      subtext.textContent = "generating..."
+      document.body.appendChild(inputBox)
+
+      const englishText = input.value
+      const result = await latexApi.englishToLatex(englishText)
+      const latex = `$${result}$`
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from, to })
+        .insertContent(latex)
+        .enter()
+        .run()
+
+      inputBox.remove()
+    }
+  })
+}
+
 const renderItems = () => {
   let component: ReactRenderer | null = null
   let popup: any | null = null
@@ -238,4 +309,5 @@ const SlashCommandExtension = (config: SlashCommandConfig) =>
       render: renderItems,
     },
   })
+
 export default SlashCommandExtension
