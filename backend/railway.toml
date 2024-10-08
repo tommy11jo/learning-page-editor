@@ -1,0 +1,7 @@
+# Build and start commands
+buildCommand = "pip install poetry && poetry install --no-dev"
+startCommand = "poetry run uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+# Custom domain configuration
+[services.learning-page-editor.customDomain]
+domain = "learning-page-editor-production.up.railway.app"

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useRef } from "react"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { MCQNode } from "./MCQNode"
@@ -11,18 +11,20 @@ const TipTapViewer: React.FC = () => {
     editable: false,
   })
 
+  const initialContentLoaded = useRef(false)
   useEffect(() => {
     const fetchLearningPage = async () => {
+      if (!editor || initialContentLoaded.current) return
       try {
         const page = await learningPageApi.getLearningPage()
         editor?.commands.setContent(JSON.parse(page.content))
       } catch (error) {
         console.error("Error fetching learning page:", error)
       }
+      initialContentLoaded.current = true
     }
-
     fetchLearningPage()
-  }, [editor?.commands])
+  }, [editor])
 
   if (!editor) {
     return null

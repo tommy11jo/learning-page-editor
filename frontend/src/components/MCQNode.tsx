@@ -9,20 +9,38 @@ import { Node } from "@tiptap/core"
 import { Edit, Trash2 } from "lucide-react"
 import { MCQData, MCQModal } from "./MCQModal"
 import { mcqApi } from "../api/mcq"
-import { useSaveStatus } from "./SaveStatusContext"
+import { EditorMode, useTipTapEditor } from "./TipTapContext"
 import { toast } from "react-hot-toast"
 import { learningPageApi } from "../api/learningPage"
 
 export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
+  // Note: client side correctAnswer is done for ease, not a good practice
   const { question, options, id, correctAnswer } = props.node.attrs
   const initialData = { question, options, id, correctAnswer }
   const editor = props.editor
 
-  const { setSaveStatus } = useSaveStatus()
+  const { setSaveStatus, submissions, mode } = useTipTapEditor()
+  let initialAnswer = null
 
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  if (mode === EditorMode.View) {
+    const currentSubmission = submissions.find(
+      (submission) => submission.question_id === id
+    )
+    initialAnswer = currentSubmission ? currentSubmission.selected_answer : null
+  }
+
+  const [selectedOption, setSelectedOption] = useState<string | null>(
+    initialAnswer !== null ? options[initialAnswer] : null
+  )
+
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [submissionResult, setSubmissionResult] = useState<string | null>(null)
+  const [submissionResult, setSubmissionResult] = useState<string | null>(
+    initialAnswer !== null
+      ? initialAnswer === correctAnswer
+        ? "Correct!"
+        : "Incorrect. Try again."
+      : null
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

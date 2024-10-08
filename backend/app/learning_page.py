@@ -7,7 +7,7 @@ from .utils import load_json, save_json
 
 router = APIRouter(prefix="/learning_page")
 
-LEARNING_PAGE_FILE = "database/learning_page.json"
+LEARNING_PAGE_FILE = "/tmp/learning_page.json"
 
 
 class LearningPage(BaseModel):

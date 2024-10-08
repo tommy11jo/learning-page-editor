@@ -4,16 +4,16 @@ import SlashCommandExtension from "./SlashCommand"
 import Placeholder from "@tiptap/extension-placeholder"
 import { MCQModal, MCQData } from "./MCQModal"
 import { MCQNode } from "./MCQNode"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { learningPageApi } from "../api/learningPage"
 import { mcqApi } from "../api/mcq"
-import { useSaveStatus } from "./SaveStatusContext"
+import { useTipTapEditor } from "./TipTapContext"
 import { toast } from "react-hot-toast"
 
 const TipTapEditor = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { saveStatus, setSaveStatus } = useSaveStatus()
+  const { saveStatus, setSaveStatus } = useTipTapEditor()
 
   const openMCQModal = useCallback(() => {
     setIsModalOpen(true)
@@ -46,22 +46,22 @@ const TipTapEditor = () => {
       setSaveStatus("Unsaved")
     },
   })
-  const [initialContentLoaded, setInitialContentLoaded] = useState(false)
+  const initialContentLoaded = useRef(false)
   useEffect(() => {
     const fetchLearningPage = async () => {
-      if (initialContentLoaded) return
+      if (!editor || initialContentLoaded.current) return
       try {
         const page = await learningPageApi.getLearningPage()
         if (page && page.content) {
           editor?.commands.setContent(JSON.parse(page.content))
-          setInitialContentLoaded(true)
         }
       } catch (error) {
         console.error("Error fetching learning page:", error)
       }
+      initialContentLoaded.current = true
     }
     fetchLearningPage()
-  }, [editor?.commands, initialContentLoaded])
+  }, [editor])
 
   const insertMCQNode = (data: MCQData, editor: Editor) => {
     editor

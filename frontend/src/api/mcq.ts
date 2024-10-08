@@ -56,4 +56,11 @@ export const mcqApi = {
     }>(`${API_BASE_URL}/multi_choice_question/delete/${questionId}`)
     return response.data
   },
+
+  getSubmissions: async (): Promise<Submission[]> => {
+    const response = await axios.get<Submission[]>(
+      `${API_BASE_URL}/multi_choice_question/submissions`
+    )
+    return response.data
+  },
 }

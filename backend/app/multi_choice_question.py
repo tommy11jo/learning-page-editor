@@ -12,8 +12,9 @@ from .utils import load_json, save_json
 
 router = APIRouter(prefix="/multi_choice_question")
 
-QUESTIONS_FILE = "database/questions.json"
-SUBMISSIONS_FILE = "database/submissions.json"
+# must use /tmp on Railway because the file system is ephemeral
+QUESTIONS_FILE = "/tmp/questions.json"
+SUBMISSIONS_FILE = "/tmp/submissions.json"
 
 
 class MultiChoiceQuestion(BaseModel):
@@ -99,3 +100,9 @@ async def delete_multi_choice_question(question_id: str):
         "message": "Multi-choice question deleted successfully",
         "deleted_question": deleted_question,
     }
+
+
+@router.get("/submissions")
+async def get_submissions():
+    submissions = load_json(SUBMISSIONS_FILE)
+    return submissions

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import Modal from "react-modal"
 import Header from "./components/Header"
 import TipTapEditor from "./components/TipTapEditor"
 import TipTapViewer from "./components/TipTapViewer"
-import { SaveStatusProvider } from "./components/SaveStatusContext"
+import { EditorProvider, useTipTapEditor } from "./components/TipTapContext"
 import { Toaster } from "react-hot-toast"
 
 enum EditorMode {
@@ -11,11 +11,8 @@ enum EditorMode {
   View = "view",
 }
 
-function App() {
-  const [mode, setMode] = useState<EditorMode>(EditorMode.Edit)
-  useEffect(() => {
-    Modal.setAppElement("#root")
-  }, [])
+function AppContent() {
+  const { mode, setMode } = useTipTapEditor()
 
   const handleModeToggle = () => {
     setMode(mode === EditorMode.Edit ? EditorMode.View : EditorMode.Edit)
@@ -52,11 +49,20 @@ function App() {
         </div>
       </div>
       <div className="container mx-auto px-4">
-        <SaveStatusProvider>
-          {mode === EditorMode.Edit ? <TipTapEditor /> : <TipTapViewer />}
-        </SaveStatusProvider>
+        {mode === EditorMode.Edit ? <TipTapEditor /> : <TipTapViewer />}
       </div>
     </>
+  )
+}
+function App() {
+  useEffect(() => {
+    Modal.setAppElement("#root")
+  }, [])
+
+  return (
+    <EditorProvider>
+      <AppContent />
+    </EditorProvider>
   )
 }
 

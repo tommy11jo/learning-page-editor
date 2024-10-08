@@ -19,7 +19,7 @@ export const learningPageApi = {
 
   getLearningPage: async (): Promise<LearningPage> => {
     const response = await axios.get<LearningPage>(
-      `${API_BASE_URL}/learning_page`
+      `${API_BASE_URL}/learning_page/`
     )
     return response.data
   },
