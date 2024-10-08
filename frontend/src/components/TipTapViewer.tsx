@@ -1,18 +1,28 @@
-import React from "react"
-import { EditorContent, JSONContent, useEditor } from "@tiptap/react"
+import React, { useEffect } from "react"
+import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { MCQNode } from "./MCQNode"
+import { learningPageApi } from "../api/learningPage"
 
-interface TipTapViewerProps {
-  jsonContent: JSONContent | JSONContent[]
-}
-
-const TipTapViewer: React.FC<TipTapViewerProps> = ({ jsonContent }) => {
+const TipTapViewer: React.FC = () => {
   const editor = useEditor({
     extensions: [StarterKit, MCQNode],
-    content: jsonContent,
+    content: "",
     editable: false,
   })
+
+  useEffect(() => {
+    const fetchLearningPage = async () => {
+      try {
+        const page = await learningPageApi.getLearningPage()
+        editor?.commands.setContent(JSON.parse(page.content))
+      } catch (error) {
+        console.error("Error fetching learning page:", error)
+      }
+    }
+
+    fetchLearningPage()
+  }, [editor?.commands])
 
   if (!editor) {
     return null

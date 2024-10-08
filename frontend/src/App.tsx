@@ -9,25 +9,6 @@ enum EditorMode {
   View = "view",
 }
 
-const sampleJSONContent = {
-  type: "doc",
-  content: [
-    {
-      type: "mcqNode",
-      attrs: {
-        id: "mcq-1234",
-        question: "Choose the correct answer",
-        options: ["Option A", "Option B", "Option C", "Option D"],
-      },
-      content: [{ type: "text", text: "MCQ: Choose the correct answer" }],
-    },
-    {
-      type: "paragraph",
-      content: [{ type: "text", text: "This is a paragraph" }],
-    },
-  ],
-}
-
 function App() {
   const [mode, setMode] = useState<EditorMode>(EditorMode.Edit)
   useEffect(() => {
@@ -41,8 +22,9 @@ function App() {
   return (
     <>
       <Header />
-      <div className="container mx-auto px-4 py-4 flex flex-col items-start">
+      <div className="container mx-auto px-4 py-2 flex flex-col items-start">
         <div className="flex items-center space-x-2">
+          <span>Choose a mode:</span>
           <span
             className={`text-sm ${mode === EditorMode.Edit ? "font-bold" : ""}`}
           >
@@ -67,11 +49,7 @@ function App() {
         </div>
       </div>
       <div className="container mx-auto px-4">
-        {mode === EditorMode.Edit ? (
-          <TipTapEditor initialJSONContent={sampleJSONContent} />
-        ) : (
-          <TipTapViewer jsonContent={sampleJSONContent} />
-        )}
+        {mode === EditorMode.Edit ? <TipTapEditor /> : <TipTapViewer />}
       </div>
     </>
   )

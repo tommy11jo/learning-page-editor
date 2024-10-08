@@ -8,6 +8,7 @@ import {
 import { Node } from "@tiptap/core"
 import { HelpCircle, Edit, Trash2 } from "lucide-react"
 import { MCQData, MCQModal } from "./MCQModal"
+import { mcqApi } from "../api/mcq"
 
 export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
   const { question, options, id, correctAnswer } = props.node.attrs
@@ -15,11 +16,28 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
   const editor = props.editor
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submissionResult, setSubmissionResult] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement submission logic
-    console.log("Submitted answer:", selectedOption)
-    console.log("question id", id)
+    if (!selectedOption) {
+      console.log("No option selected")
+      return
+    }
+
+    try {
+      const submission = {
+        question_id: id,
+        selected_answer: options.indexOf(selectedOption),
+      }
+      const response = await mcqApi.submitAnswer(submission)
+      setSubmissionResult(
+        response.is_correct ? "Correct!" : "Incorrect. Try again."
+      )
+    } catch (error) {
+      console.error("Error submitting answer:", error)
+      setSubmissionResult("Error submitting answer. Please try again.")
+    }
   }
 
   const handleClear = () => {
@@ -30,6 +48,15 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
     // tiptap allows forcing a re-render using attribute updates
     props.updateAttributes({ ...data })
     setIsModalOpen(false)
+
+    mcqApi
+      .upsertQuestion(data)
+      .then(() => {
+        console.log("MCQ question saved successfully")
+      })
+      .catch((error) => {
+        console.error("Error saving MCQ question:", error)
+      })
   }
 
   return (
@@ -99,6 +126,17 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
               >
                 Clear
               </button>
+            </div>
+          )}
+          {submissionResult && (
+            <div
+              className={`mt-4 p-2 rounded ${
+                submissionResult.includes("Correct")
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {submissionResult}
             </div>
           )}
         </form>

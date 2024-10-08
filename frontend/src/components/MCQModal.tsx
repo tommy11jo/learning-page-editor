@@ -54,15 +54,14 @@ const MCQModal = ({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    handleUpdateMCQ(
-      {
-        id: initialData?.id,
-        question: tempQuestion,
-        options: tempOptions.filter((option) => option.trim() !== ""),
-        correctAnswer,
-      },
-      editor
-    )
+    const mcqData: MCQData = {
+      id: initialData?.id,
+      question: tempQuestion,
+      options: tempOptions.filter((option) => option.trim() !== ""),
+      correctAnswer,
+    }
+
+    handleUpdateMCQ(mcqData, editor)
     setHasUnsavedChanges(false)
     setIsOpen(false)
   }
