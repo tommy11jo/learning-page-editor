@@ -24,4 +24,4 @@ app.include_router(learning_page_router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Hi world"}
+    return {"message": "Test hi world"}

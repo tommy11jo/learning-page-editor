@@ -3,6 +3,8 @@ import Modal from "react-modal"
 import Header from "./components/Header"
 import TipTapEditor from "./components/TipTapEditor"
 import TipTapViewer from "./components/TipTapViewer"
+import { SaveStatusProvider } from "./components/SaveStatusContext"
+import { Toaster } from "react-hot-toast"
 
 enum EditorMode {
   Edit = "edit",
@@ -22,6 +24,7 @@ function App() {
   return (
     <>
       <Header />
+      <Toaster position="top-right" />
       <div className="container mx-auto px-4 py-2 flex flex-col items-start">
         <div className="flex items-center space-x-2">
           <span>Choose a mode:</span>
@@ -49,7 +52,9 @@ function App() {
         </div>
       </div>
       <div className="container mx-auto px-4">
-        {mode === EditorMode.Edit ? <TipTapEditor /> : <TipTapViewer />}
+        <SaveStatusProvider>
+          {mode === EditorMode.Edit ? <TipTapEditor /> : <TipTapViewer />}
+        </SaveStatusProvider>
       </div>
     </>
   )

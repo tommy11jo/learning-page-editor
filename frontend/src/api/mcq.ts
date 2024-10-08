@@ -22,7 +22,6 @@ export interface MCQRequestBody {
 
 export const mcqApi = {
   upsertQuestion: async (question: MCQData): Promise<{ message: string }> => {
-    console.log("question", question)
     if (question.id === undefined || question.correctAnswer === undefined) {
       throw new Error("Question ID and correct answer are required")
     }

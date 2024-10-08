@@ -1,7 +1,5 @@
 import { BubbleMenu, Editor, EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import { Extension } from "@tiptap/core"
-import { Command } from "@tiptap/core"
 import SlashCommandExtension from "./SlashCommand"
 import Placeholder from "@tiptap/extension-placeholder"
 import { MCQModal, MCQData } from "./MCQModal"
@@ -10,31 +8,12 @@ import { useState, useCallback, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { learningPageApi } from "../api/learningPage"
 import { mcqApi } from "../api/mcq"
-
-declare module "@tiptap/core" {
-  interface Commands<ReturnType> {
-    appendTextExtension: {
-      appendText: () => ReturnType
-    }
-  }
-}
-
-const AppendTextExtension = Extension.create({
-  addCommands() {
-    return {
-      appendText:
-        (): Command =>
-        ({ commands }) => {
-          // TODO: this is just an dummy command that appends text. implement MCQ command
-          const range = this.editor.state.selection
-          return commands.insertContentAt(range.to, " appends text")
-        },
-    }
-  },
-})
+import { useSaveStatus } from "./SaveStatusContext"
+import { toast } from "react-hot-toast"
 
 const TipTapEditor = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { saveStatus, setSaveStatus } = useSaveStatus()
 
   const openMCQModal = useCallback(() => {
     setIsModalOpen(true)
@@ -44,7 +23,6 @@ const TipTapEditor = () => {
     extensions: [
       StarterKit,
       SlashCommandExtension({ openMCQModal }),
-      AppendTextExtension,
       Placeholder.configure({
         placeholder: "Write here...",
       }),
@@ -64,6 +42,9 @@ const TipTapEditor = () => {
       },
     },
     content: "",
+    onUpdate: () => {
+      setSaveStatus("Unsaved")
+    },
   })
   const [initialContentLoaded, setInitialContentLoaded] = useState(false)
   useEffect(() => {
@@ -95,31 +76,37 @@ const TipTapEditor = () => {
       .run()
   }
 
-  const handleUpdateMCQ = useCallback((data: MCQData, editor: Editor) => {
-    // save both the mcq and the learning page
-    // invariant: when mcq exists inside the json learning page, it must also exist in the database
-    const newData = { ...data, id: uuidv4() }
-    insertMCQNode(newData, editor)
+  const handleUpdateMCQ = useCallback(
+    (data: MCQData, editor: Editor) => {
+      // save both the mcq and the learning page
+      // invariant: when mcq exists inside the json learning page, it must also exist in the database
+      const newData = { ...data, id: uuidv4() }
+      insertMCQNode(newData, editor)
 
-    mcqApi
-      .upsertQuestion(newData)
-      .then(() => {
-        console.log("MCQ question saved successfully")
-      })
-      .catch((error) => {
-        console.error("Error saving MCQ question:", error)
-      })
+      mcqApi
+        .upsertQuestion(newData)
+        .then(() => {
+          toast.success("MCQ question saved successfully")
+        })
+        .catch((error) => {
+          console.error("Error saving MCQ question:", error)
+          toast.error("Failed to save MCQ question")
+        })
 
-    const content = JSON.stringify(editor.getJSON())
-    learningPageApi
-      .upsertLearningPage({ content })
-      .then(() => {
-        console.log("Learning page saved successfully")
-      })
-      .catch((error) => {
-        console.error("Error saving learning page:", error)
-      })
-  }, [])
+      const content = JSON.stringify(editor.getJSON())
+      learningPageApi
+        .upsertLearningPage({ content })
+        .then(() => {
+          toast.success("Learning page saved successfully")
+        })
+        .catch((error) => {
+          console.error("Error saving learning page:", error)
+          toast.error("Failed to save learning page")
+        })
+      setSaveStatus("Saved")
+    },
+    [setSaveStatus]
+  )
 
   const handleSave = useCallback(() => {
     if (editor) {
@@ -127,15 +114,15 @@ const TipTapEditor = () => {
       learningPageApi
         .upsertLearningPage({ content })
         .then(() => {
-          console.log("Learning page saved successfully")
-          // You can add a toast notification here if you want
+          toast.success("Learning page saved successfully")
+          setSaveStatus("Saved")
         })
         .catch((error) => {
           console.error("Error saving learning page:", error)
-          // You can add an error notification here
+          toast.error("Failed to save learning page")
         })
     }
-  }, [editor])
+  }, [editor, setSaveStatus])
 
   if (!editor) return <></>
 
@@ -143,7 +130,12 @@ const TipTapEditor = () => {
     "border-none text-black text-sm font-medium p-1 hover:bg-gray-200 rounded-md"
 
   return (
-    <div>
+    <div className="relative">
+      <span>
+        Press{" "}
+        <kbd className="inline-block px-1 rounded-md bg-gray-300">"/"</kbd> to
+        open the command menu.
+      </span>
       <span className="flex items-center">
         To save your work, click
         <button
@@ -153,17 +145,24 @@ const TipTapEditor = () => {
           Save
         </button>
       </span>
-      <div className="p-4 m-4 border border-gray-400 rounded-lg">
+
+      <div className="relative p-4 m-4 border border-gray-400 rounded-lg">
+        <div className="absolute top-2 right-2">
+          {saveStatus === "Saved" ? (
+            <span className="text-sm font-normal text-gray-600 uppercase">
+              Saved
+            </span>
+          ) : (
+            <span className="text-sm font-normal text-red-600 uppercase">
+              Unsaved
+            </span>
+          )}
+        </div>
+
         <BubbleMenu
           className="flex bg-gray-300 gap-2 p-1 rounded-md border border-gray-400"
           editor={editor}
         >
-          <button
-            onClick={() => editor.chain().focus().appendText().run()}
-            className={bubbleMenuButtonClass}
-          >
-            Append Text
-          </button>
           <button
             onClick={() => {
               editor.chain().focus().toggleBold().run()

@@ -6,14 +6,20 @@ import {
   ReactNodeViewRenderer,
 } from "@tiptap/react"
 import { Node } from "@tiptap/core"
-import { HelpCircle, Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import { MCQData, MCQModal } from "./MCQModal"
 import { mcqApi } from "../api/mcq"
+import { useSaveStatus } from "./SaveStatusContext"
+import { toast } from "react-hot-toast"
+import { learningPageApi } from "../api/learningPage"
 
 export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
   const { question, options, id, correctAnswer } = props.node.attrs
   const initialData = { question, options, id, correctAnswer }
   const editor = props.editor
+
+  const { setSaveStatus } = useSaveStatus()
+
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [submissionResult, setSubmissionResult] = useState<string | null>(null)
@@ -21,7 +27,7 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedOption) {
-      console.log("No option selected")
+      toast.error("Please select an option before submitting.")
       return
     }
 
@@ -52,11 +58,32 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
     mcqApi
       .upsertQuestion(data)
       .then(() => {
-        console.log("MCQ question saved successfully")
+        toast.success("MCQ question saved successfully")
       })
       .catch((error) => {
-        console.error("Error saving MCQ question:", error)
+        toast.error("Error saving MCQ question: " + error.message)
+        toast.error("Error saving MCQ question. Please try again.")
       })
+    setSaveStatus("Saved")
+  }
+  const deleteMCQ = async () => {
+    props.deleteNode()
+    try {
+      await mcqApi.deleteQuestion(id)
+      toast.success("MCQ question deleted successfully")
+    } catch (error) {
+      console.error("Error deleting MCQ question:", error)
+      toast.error("Error deleting MCQ question. Please try again.")
+    }
+    try {
+      await learningPageApi.upsertLearningPage({
+        content: JSON.stringify(editor.getJSON()),
+      })
+      setSaveStatus("Saved")
+    } catch (error) {
+      console.error("Error saving learning page:", error)
+      toast.error("Error saving learning page. Please try again.")
+    }
   }
 
   return (
@@ -74,7 +101,7 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
             <Edit size={20} />
           </button>
           <button
-            onClick={() => props.deleteNode()}
+            onClick={deleteMCQ}
             className="p-1 text-red-500 hover:text-red-600"
             aria-label="Delete"
           >
@@ -83,7 +110,6 @@ export const MCQNodeView: React.FC<NodeViewProps> = (props) => {
         </div>
       )}
       <div className="mcq-question mb-2 pl-4 flex items-center uppercase">
-        <HelpCircle size={20} className="mr-2" />
         <span>Quick Quiz</span>
       </div>
       <div className="mcq-content bg-gray-50 px-4">

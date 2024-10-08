@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 from .utils import load_json, save_json
 
@@ -23,6 +23,4 @@ async def upsert_learning_page(page: LearningPage):
 @router.get("/")
 async def get_learning_page():
     page = load_json(LEARNING_PAGE_FILE)
-    if not page:
-        raise HTTPException(status_code=404, detail="Learning page not found")
-    return page
+    return page or {"content": ""}
